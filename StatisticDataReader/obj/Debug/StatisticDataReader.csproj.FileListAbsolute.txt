@@ -1,0 +1,12 @@
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\StatisticDataReader.exe.config
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\StatisticDataReader.exe
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\StatisticDataReader.pdb
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\obj\Debug\StatisticDataReader.csproj.CoreCompileInputs.cache
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\obj\Debug\StatisticDataReader.exe
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\obj\Debug\StatisticDataReader.pdb
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\obj\Debug\StatisticDataReader.csprojAssemblyReference.cache
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\WebDriver.dll
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\WebDriver.Support.dll
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\WebDriver.xml
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\bin\Debug\WebDriver.Support.xml
+C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\obj\Debug\StatisticDataReader.csproj.CopyComplete
