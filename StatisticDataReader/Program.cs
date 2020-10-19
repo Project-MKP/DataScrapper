@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading;
+using MySql.Data.MySqlClient;
 
 namespace StatisticDataReader
 {
@@ -25,7 +26,7 @@ namespace StatisticDataReader
     class Program
     {
         private static string dataDate;
-        private const string path = @"C:\Users\maciek\source\repos\StatisticDataReader\StatisticDataReader\DataFile\";
+        private const string path = @"C:\Users\Krystian\Desktop\DataScrapper\StatisticDataReader\DataFile\";
         private const string conStr = "";
         private static string[] locations = { "Aleje Jerozolimskie/pl. Zawiszy - suma", 
             "Banacha/Żwirki i Wigury (display)", 
@@ -47,9 +48,10 @@ namespace StatisticDataReader
 
         static void Main(string[] args)
         {
-            GetDownloadLinks();
+            //GetDownloadLinks();
             bikersCounts = ReadBikersData(path);
-
+            ConnectToDatabase();
+            
             Console.WriteLine("Data: "+dataDate);
             for (int i = 0; i <= 14; i++)
             {
@@ -78,6 +80,8 @@ namespace StatisticDataReader
                 if(i == 1)
                 {
                     dataDate = dataArray[i];
+
+
                 }
                 else if(i > 1)
                 {
@@ -87,18 +91,57 @@ namespace StatisticDataReader
             return bikers;
         }
 
-        static void ConnectToDatabase(string conStr)
+        static void ConnectToDatabase()
         {
-            SqlConnection newSqlCon = new SqlConnection(conStr);
 
-            try
+            string connStr = "server=sql7.freesqldatabase.com;user=sql7370562;database=sql7370562;password=T1HSwIdfN2;";
+            using var con = new MySqlConnection(connStr);
+            con.Open();
+            
+            string sql1 = "SELECT * FROM data";
+            using var cmd1 = new MySqlCommand(sql1, con);
+            using MySqlDataReader rdr = cmd1.ExecuteReader();
+
+            if (!rdr.HasRows)
             {
-                newSqlCon.Open();
+                con.Close();
+
+                con.Open();
+
+                string sql = "INSERT INTO data (address, quantity) VALUES (@address, @quantity)";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@address", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@quantity", MySqlDbType.VarChar);
+
+                for (int i = 0; i <= 14; i++)
+                {
+                    cmd.Parameters["@address"].Value = locations[i];
+                    cmd.Parameters["@quantity"].Value = bikersCounts[i];
+                    cmd.ExecuteNonQuery();
+                }
             }
-            catch
+            else 
             {
-                Console.WriteLine("Can't connect to database!");
+                con.Close();
+                con.Open();
+                
+                string sql = "UPDATE data SET address = @address, quantity = @quantity WHERE id = @id" ;
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@address", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@quantity", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@id", MySqlDbType.Int32);
+
+                for (int i = 1; i <= 15; i++)
+                {
+                    cmd.Parameters["@address"].Value = i;
+                    cmd.Parameters["@address"].Value = locations[i - 1];
+                    cmd.Parameters["@quantity"].Value = bikersCounts[i-1];
+                    cmd.ExecuteNonQuery();
+                }
             }
+
         }
 
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
