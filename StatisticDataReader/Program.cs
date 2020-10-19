@@ -94,7 +94,7 @@ namespace StatisticDataReader
         static void ConnectToDatabase()
         {
 
-            string connStr = "server=sql7.freesqldatabase.com;user=sql7370562;database=sql7370562;password=T1HSwIdfN2;";
+            string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;";
             using var con = new MySqlConnection(connStr);
             con.Open();
             
@@ -141,7 +141,7 @@ namespace StatisticDataReader
                     cmd.ExecuteNonQuery();
                 }
             }
-
+            
         }
 
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
