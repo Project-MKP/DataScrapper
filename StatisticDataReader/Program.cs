@@ -64,7 +64,10 @@ namespace StatisticDataReader
         public static string ReplaceCharacters(string toReplace) //usuwanie niepotrzebnych dopisków i zamiana polskich znaków na angielskie
         {
             toReplace = toReplace.Replace(" - suma", "")
-                    .Replace("(display)", "")
+                    .Replace(" (display)", "")
+                    .Replace("Banacha/", "Banacha oraz ")
+                    .Replace("/Trojdena", " oraz Trojdena")
+                    .Replace("pl.", "plac")
                     .Replace("/", " i ")
                     .Replace('Ś', 'S')
                     .Replace('Ż', 'Z')
