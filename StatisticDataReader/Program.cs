@@ -23,12 +23,10 @@ namespace StatisticDataReader
     * 3. Odczyt danych z pliku 
     * 4. Połączenie + przesyłanie danych do bazy SQL
     */
-
     class Program
     {
-        private static string dataDate;
-        private const string path = @""; //ścieżka do folderu w którym zapisuje się plik z danymi np. "C:/Users/Test/Desktop/DataScrapper/StatisticDataReader/DataFile/"
-        private const string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;";
+        private const string path = @"C:\Users\ch\Desktop\DataScrapper\StatisticDataReader\DataFile\"; //ścieżka do folderu w którym zapisuje się plik z danymi, w naszym przypadku jest to ścieżka na naszym serwerze.
+        private const string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;"; //ciąg zaków dla biblioteki łączącej skrypt i aplikację z bazą danych
         private static string[] locations = { "Aleje Jerozolimskie/pl. Zawiszy - suma", 
             "Banacha/Żwirki i Wigury (display)", 
             "Czerniakowska - suma", 
@@ -49,31 +47,25 @@ namespace StatisticDataReader
 
         static void Main(string[] args)
         {
-            //GetDownloadLinks();
+            GetDownloadLinks();
             bikersCounts = ReadBikersData(path);
-            ConnectToDatabase();
-            
-            //Console.WriteLine("Data: "+dataDate);
-            //for (int i = 0; i <= 14; i++)
-            //{
-            //    Console.WriteLine(locations[i]+": "+bikersCounts[i]);
-            //}
-            Console.ReadKey();
+            ConnectAndFillDatabase();
         }
 
         static void GetDataFile(string url, string path) //funkcja odpowiedzialna za pobranie pliku z danymi.
         {
-            using (WebClient Client = new WebClient())
+            using (WebClient wClient = new WebClient())
             {
-                Client.DownloadFile(url, path);
+                Console.WriteLine("Downloading data from: "+url+" to: "+path);
+                wClient.DownloadFile(url, path);
             }
         }
 
-        public static string ReplaceCharacters(string toReplace)
+        public static string ReplaceCharacters(string toReplace) //usuwanie niepotrzebnych dopisków i zamiana polskich znaków na angielskie
         {
             toReplace = toReplace.Replace(" - suma", "")
-                    .Replace("/", " i ")
                     .Replace("(display)", "")
+                    .Replace("/", " i ")
                     .Replace('Ś', 'S')
                     .Replace('Ż', 'Z')
                     .Replace('ł', 'l')
@@ -95,13 +87,7 @@ namespace StatisticDataReader
 
             for(int i = 0; i <= 16; i++)
             {
-                if(i == 1)
-                {
-                    dataDate = dataArray[i];
-
-
-                }
-                else if(i > 1)
+                if(i > 1)
                 {
                     bikers.Add(int.Parse(dataArray[i]));
                 }
@@ -109,15 +95,15 @@ namespace StatisticDataReader
             return bikers;
         }
 
-        static void ConnectToDatabase()
+        static void ConnectAndFillDatabase() //połączenie z bazą danych sql + aktulizacja nowych danych
         {
+            Console.WriteLine("Connecting to database");
             using var con = new MySqlConnection(connStr);
             con.Open();
-            
             string sql1 = "SELECT * FROM data";
             using var cmd1 = new MySqlCommand(sql1, con);
             using MySqlDataReader rdr = cmd1.ExecuteReader();
-
+            Console.WriteLine("Filling data");
             if (!rdr.HasRows)
             {
                 con.Close();
@@ -157,14 +143,18 @@ namespace StatisticDataReader
                     cmd.ExecuteNonQuery();
                 }
             }
-            
+            Console.WriteLine("Finished!");
         }
 
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
         {
             const string bikeDatabase = "http://greenelephant.pl/shiny/rowery/";
 
-            using (FirefoxDriver fDriver = new FirefoxDriver())
+            Console.WriteLine("Starting browser");
+            FirefoxOptions options = new FirefoxOptions();
+            options.AddArguments("--headless");
+
+            using (FirefoxDriver fDriver = new FirefoxDriver(options)) //do webscrappingu korzystamy z przeglądarki firefox
             {
                 fDriver.Navigate().GoToUrl(bikeDatabase);
                 
@@ -181,11 +171,10 @@ namespace StatisticDataReader
 
                 foreach (string x in locations)
                 {
-                    Console.WriteLine(x);
+                    Console.WriteLine("Checking data for: "+x);
                     fDriver.FindElement(By.XPath("//span[contains(text(),'" + x + "')]")).Click();
                 }
 
-                Thread.Sleep(20000);
                 string downloadLink = fDriver.FindElement(By.XPath("//a[@id='eksport']")).GetAttribute("href");
                 GetDataFile(downloadLink, path+"data.txt");
                 fDriver.Close();
