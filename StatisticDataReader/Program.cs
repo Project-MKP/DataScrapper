@@ -13,21 +13,22 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading;
 using MySql.Data.MySqlClient;
+using System.Security.Cryptography.X509Certificates;
 
 namespace StatisticDataReader
 {
     /*
-    * 1. Webscrapping linku do pobierania
-    * 2. Pobieranie danych ze strony do txt
-    * 3. Czytanie danych z pliku txt
+    * 1. Webscrapping linku do pobrania dokumentu
+    * 2. Pobieranie dokumentu z odczytami i zapis na dysku
+    * 3. Odczyt danych z pliku 
     * 4. Połączenie + przesyłanie danych do bazy SQL
     */
 
     class Program
     {
         private static string dataDate;
-        private const string path = @"C:\Users\Krystian\Desktop\DataScrapper\StatisticDataReader\DataFile\";
-        private const string conStr = "";
+        private const string path = @""; //ścieżka do folderu w którym zapisuje się plik z danymi np. "C:/Users/Test/Desktop/DataScrapper/StatisticDataReader/DataFile/"
+        private const string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;";
         private static string[] locations = { "Aleje Jerozolimskie/pl. Zawiszy - suma", 
             "Banacha/Żwirki i Wigury (display)", 
             "Czerniakowska - suma", 
@@ -52,11 +53,11 @@ namespace StatisticDataReader
             bikersCounts = ReadBikersData(path);
             ConnectToDatabase();
             
-            Console.WriteLine("Data: "+dataDate);
-            for (int i = 0; i <= 14; i++)
-            {
-                Console.WriteLine(locations[i]+": "+bikersCounts[i]);
-            }
+            //Console.WriteLine("Data: "+dataDate);
+            //for (int i = 0; i <= 14; i++)
+            //{
+            //    Console.WriteLine(locations[i]+": "+bikersCounts[i]);
+            //}
             Console.ReadKey();
         }
 
@@ -67,7 +68,24 @@ namespace StatisticDataReader
                 Client.DownloadFile(url, path);
             }
         }
-        
+
+        public static string ReplaceCharacters(string toReplace)
+        {
+            toReplace = toReplace.Replace(" - suma", "")
+                    .Replace("/", " i ")
+                    .Replace("(display)", "")
+                    .Replace('Ś', 'S')
+                    .Replace('Ż', 'Z')
+                    .Replace('ł', 'l')
+                    .Replace('ę', 'e')
+                    .Replace('ń', 'n')
+                    .Replace('Ż', 'Z')
+                    .Replace('ó', 'o')
+                    .Replace('Ł', 'L')
+                    .Replace('Ż', 'Z');
+            return toReplace;
+        }
+
         static List<int> ReadBikersData(string path) //odczyt i zapais do zmiennych danych oraz daty z pobranego pliku.
         {
             List<int> bikers = new List<int>();
@@ -93,8 +111,6 @@ namespace StatisticDataReader
 
         static void ConnectToDatabase()
         {
-
-            string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;";
             using var con = new MySqlConnection(connStr);
             con.Open();
             
@@ -116,7 +132,7 @@ namespace StatisticDataReader
 
                 for (int i = 0; i <= 14; i++)
                 {
-                    cmd.Parameters["@address"].Value = locations[i];
+                    cmd.Parameters["@address"].Value = ReplaceCharacters(locations[i]);
                     cmd.Parameters["@quantity"].Value = bikersCounts[i];
                     cmd.ExecuteNonQuery();
                 }
@@ -135,8 +151,8 @@ namespace StatisticDataReader
 
                 for (int i = 1; i <= 15; i++)
                 {
-                    cmd.Parameters["@address"].Value = i;
-                    cmd.Parameters["@address"].Value = locations[i - 1];
+                    cmd.Parameters["@id"].Value = i;
+                    cmd.Parameters["@address"].Value = ReplaceCharacters(locations[i - 1]);
                     cmd.Parameters["@quantity"].Value = bikersCounts[i-1];
                     cmd.ExecuteNonQuery();
                 }
