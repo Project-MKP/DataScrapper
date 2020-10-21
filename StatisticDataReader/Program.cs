@@ -12,7 +12,6 @@ using System.Runtime.CompilerServices;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading;
-using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography.X509Certificates;
 using System.Dynamic;
@@ -47,6 +46,7 @@ namespace StatisticDataReader
 
         private static int freeBikes;
 
+        private static List<string> weatherData = new List<string>();
         private static List<int> bikersCounts = new List<int>();
         private static List<int> veturiloData = new List<int>();
 
@@ -59,6 +59,7 @@ namespace StatisticDataReader
                     GetDownloadLinks();
                     bikersCounts = ReadBikersData(path);
                     veturiloData = GetBikesData();
+                    weatherData = GetWeather();
                     ConnectAndFillDatabase();
                     FillVeturiloStationsData();
                     Console.WriteLine("gówno");
@@ -363,5 +364,26 @@ namespace StatisticDataReader
             return freeBikes;
         }
 
+        static List<string> GetWeather() //webscrapping pogody
+        {
+            const string url = "https://pogoda.onet.pl/tag/prognoza-pogody";
+
+            List<string> weatherData = new List<string>(); //po kolei dane: temperatura, opis, jakość powietrza
+
+            FirefoxOptions options = new FirefoxOptions();
+            options.AddArguments("--headless");
+
+            using (FirefoxDriver fDriver = new FirefoxDriver(options))
+            {
+                fDriver.Navigate().GoToUrl(url);
+
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='temp']")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='forecastDesc']")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//span[@class='pollutionIconDesc']")).Text);
+
+                fDriver.Close();
+            }
+            return weatherData;
+        }
     }
 }
