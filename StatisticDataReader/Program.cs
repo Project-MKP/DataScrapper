@@ -27,7 +27,7 @@ namespace StatisticDataReader
     */
     class Program
     {
-        private const string path = @"C:\Users\ch\Desktop\DataScrapper\StatisticDataReader\DataFile\"; //ścieżka do folderu w którym zapisuje się plik z danymi, w naszym przypadku jest to ścieżka na naszym serwerze.
+        private const string path = @"C:\Users\Krystian\Desktop\DataScrapper\StatisticDataReader\DataFile\"; //ścieżka do folderu w którym zapisuje się plik z danymi, w naszym przypadku jest to ścieżka na naszym serwerze.
         private const string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;"; //ciąg zaków dla biblioteki łączącej skrypt i aplikację z bazą danych
         private static string[] locations = { "Aleje Jerozolimskie/pl. Zawiszy - suma", 
             "Banacha/Żwirki i Wigury (display)", 
@@ -60,6 +60,8 @@ namespace StatisticDataReader
                     bikersCounts = ReadBikersData(path);
                     veturiloData = GetBikesData();
                     ConnectAndFillDatabase();
+                    FillVeturiloStationsData();
+                    Console.WriteLine("gówno");
                     Thread.Sleep(86400000); //co 24h 86400000ms
                 }
             });
@@ -69,9 +71,12 @@ namespace StatisticDataReader
                 while (true)
                 {
                     freeBikes = GetFreeBikes();
+                    FillFreeBikesData(freeBikes);
+                    Console.WriteLine("cycki");
                     Thread.Sleep(5000); //co 5s 5000ms
                 }
             });
+            Console.ReadKey();
         }
 
         static void GetDataFile(string url, string path) //funkcja odpowiedzialna za pobranie pliku z danymi.
@@ -131,9 +136,7 @@ namespace StatisticDataReader
             Console.WriteLine("Filling data");
             if (!rdr.HasRows)
             {
-                con.Close();
-
-                con.Open();
+                rdr.Close();
 
                 string sql = "INSERT INTO data (address, quantity) VALUES (@address, @quantity)";
                 using var cmd = new MySqlCommand(sql, con);
@@ -150,9 +153,7 @@ namespace StatisticDataReader
             }
             else 
             {
-                con.Close();
-                con.Open();
-                
+                rdr.Close();
                 string sql = "UPDATE data SET address = @address, quantity = @quantity WHERE id = @id" ;
                 using var cmd = new MySqlCommand(sql, con);
 
@@ -168,7 +169,81 @@ namespace StatisticDataReader
                     cmd.ExecuteNonQuery();
                 }
             }
+            con.Close();
             Console.WriteLine("Finished!");
+        }
+
+        static void FillVeturiloStationsData()
+        {
+            using var con = new MySqlConnection(connStr);
+            con.Open();
+            string sql1 = "SELECT * FROM veturilo";
+            using var cmd1 = new MySqlCommand(sql1, con);
+            using MySqlDataReader rdr = cmd1.ExecuteReader();
+            if (!rdr.HasRows)
+            {
+                rdr.Close();
+                string sql = "INSERT INTO veturilo (stations, bikes) VALUES (@stations, @bikes)";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@stations", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@bikes", MySqlDbType.VarChar);
+
+
+                cmd.Parameters["@stations"].Value = veturiloData[0];
+                cmd.Parameters["@bikes"].Value = veturiloData[1];
+                cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                rdr.Close();
+                string sql = "UPDATE veturilo SET stations = @stations, bikes = @bikes WHERE id = @id";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@stations", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@bikes", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@id", MySqlDbType.Int32);
+
+                cmd.Parameters["@id"].Value = 1;
+                cmd.Parameters["@stations"].Value = veturiloData[0];
+                cmd.Parameters["@bikes"].Value = veturiloData[1];
+                cmd.ExecuteNonQuery();
+            }
+            con.Close();
+        }
+
+        static void FillFreeBikesData(int bikes)
+        {
+            using var con = new MySqlConnection(connStr);
+            con.Open();
+            string sql1 = "SELECT * FROM veturilo";
+            using var cmd1 = new MySqlCommand(sql1, con);
+            using MySqlDataReader rdr = cmd1.ExecuteReader();
+            if (!rdr.HasRows)
+            {
+                rdr.Close();
+                string sql = "INSERT INTO veturilo (freeb) VALUES (@freeb)";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@freeb", MySqlDbType.VarChar);
+             
+                cmd.Parameters["@freeb"].Value = bikes;
+                cmd.ExecuteNonQuery();
+            }
+            else
+            {
+                rdr.Close();
+                string sql = "UPDATE veturilo SET freeb = @freeb WHERE id = @id";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@freeb", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@id", MySqlDbType.Int32);
+
+                cmd.Parameters["@id"].Value = 1;
+                cmd.Parameters["@freeb"].Value = bikes;
+                cmd.ExecuteNonQuery();
+            }
+            con.Close();
         }
 
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
