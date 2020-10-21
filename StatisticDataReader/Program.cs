@@ -258,33 +258,37 @@ namespace StatisticDataReader
             if (!rdr.HasRows)
             {
                 rdr.Close();
-                string sql = "INSERT INTO wheather (temp, wheather, airq) VALUES (@temp, @wheather, @airq)";
+                string sql = "INSERT INTO wheather (temp, wheather, airq, imgurl) VALUES (@temp, @wheather, @airq, @imgurl)";
                 using var cmd = new MySqlCommand(sql, con);
 
                 cmd.Parameters.Add("@temp", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@wheather", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@airq", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@imgurl", MySqlDbType.VarChar);
 
                 cmd.Parameters["@temp"].Value = weatherData[0];
                 cmd.Parameters["@wheather"].Value = weatherData[1];
                 cmd.Parameters["@airq"].Value = weatherData[2];
+                cmd.Parameters["@imgurl"].Value = weatherData[3];
                 cmd.ExecuteNonQuery();
             }
             else 
             {
                 rdr.Close();
-                string sql = "UPDATE wheather SET temp = @temp, wheather = @wheather, airq = @airq WHERE id = @id";
+                string sql = "UPDATE wheather SET temp = @temp, wheather = @wheather, airq = @airq, imgurl = @imgurl  WHERE id = @id";
                 using var cmd = new MySqlCommand(sql, con);
 
                 cmd.Parameters.Add("@temp", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@wheather", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@airq", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@imgurl", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@id", MySqlDbType.Int32);
 
                 cmd.Parameters["@id"].Value = 1;
                 cmd.Parameters["@temp"].Value = weatherData[0];
                 cmd.Parameters["@wheather"].Value = weatherData[1];
                 cmd.Parameters["@airq"].Value = weatherData[2];
+                cmd.Parameters["@imgurl"].Value = weatherData[3];
                 cmd.ExecuteNonQuery();
             }
             con.Close ();
@@ -386,7 +390,7 @@ namespace StatisticDataReader
         {
             const string url = "https://pogoda.interia.pl/prognoza-szczegolowa-warszawa,cId,36917";
 
-            List<string> weatherData = new List<string>(); //po kolei dane: temperatura, opis, jakość powietrza
+            List<string> weatherData = new List<string>(); //po kolei dane: temperatura, opis, jakość powietrzal, link do obrazka
 
             FirefoxOptions options = new FirefoxOptions();
             options.AddArguments("--headless");
@@ -397,8 +401,11 @@ namespace StatisticDataReader
 
                 weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='weather-currently-temp-strict']")).Text);
                 weatherData.Add(fDriver.FindElement(By.XPath("//li[@class='weather-currently-icon-description']")).Text);
-                weatherData.Add(fDriver.FindElement(By.XPath("//div[contains(text(),'Dobra')]")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='kind']/div[@class='value']")).Text);
 
+                fDriver.Navigate().GoToUrl("https://pogoda.onet.pl/prognoza-pogody/warszawa-357732");
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='mainParams']//div[@class='forecast']//span[@class='iconHolder']//img[@class='svg']")).GetAttribute("src"));
+                
                 fDriver.Close();
             }
             return weatherData;
