@@ -246,6 +246,31 @@ namespace StatisticDataReader
             con.Close();
         }
 
+        static void FillWheatherData()
+        {
+            using var con = new MySqlConnection(connStr);
+            con.Open();
+            string sql1 = "SELECT * FROM wheather";
+            using var cmd1 = new MySqlCommand(sql1, con);
+            using MySqlDataReader rdr = cmd1.ExecuteReader();
+            if (!rdr.HasRows)
+            {
+                rdr.Close();
+                string sql = "INSERT INTO wheather (temp, wheather, airq) VALUES (@temp, @wheather, @airq)";
+                using var cmd = new MySqlCommand(sql, con);
+
+                cmd.Parameters.Add("@temp", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@wheather", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@airq", MySqlDbType.VarChar);
+
+                cmd.Parameters["@temp"].Value = "dupa";
+                cmd.Parameters["@wheather"].Value = "suty";
+                cmd.Parameters["@airq"].Value = "gej";
+                cmd.ExecuteNonQuery();
+            }
+
+        }
+
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
         {
             const string bikeDatabase = "http://greenelephant.pl/shiny/rowery/";
