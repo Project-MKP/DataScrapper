@@ -62,6 +62,7 @@ namespace StatisticDataReader
                     weatherData = GetWeather();
                     ConnectAndFillDatabase();
                     FillVeturiloStationsData();
+                    FillWheatherData();
                     Console.WriteLine("gówno");
                     Thread.Sleep(86400000); //co 24h 86400000ms
                 }
@@ -264,12 +265,29 @@ namespace StatisticDataReader
                 cmd.Parameters.Add("@wheather", MySqlDbType.VarChar);
                 cmd.Parameters.Add("@airq", MySqlDbType.VarChar);
 
-                cmd.Parameters["@temp"].Value = "dupa";
-                cmd.Parameters["@wheather"].Value = "suty";
-                cmd.Parameters["@airq"].Value = "gej";
+                cmd.Parameters["@temp"].Value = weatherData[0];
+                cmd.Parameters["@wheather"].Value = weatherData[1];
+                cmd.Parameters["@airq"].Value = weatherData[2];
                 cmd.ExecuteNonQuery();
             }
+            else 
+            {
+                rdr.Close();
+                string sql = "UPDATE wheather SET temp = @temp, wheather = @wheather, airq = @airq WHERE id = @id";
+                using var cmd = new MySqlCommand(sql, con);
 
+                cmd.Parameters.Add("@temp", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@wheather", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@airq", MySqlDbType.VarChar);
+                cmd.Parameters.Add("@id", MySqlDbType.Int32);
+
+                cmd.Parameters["@id"].Value = 1;
+                cmd.Parameters["@temp"].Value = weatherData[0];
+                cmd.Parameters["@wheather"].Value = weatherData[1];
+                cmd.Parameters["@airq"].Value = weatherData[2];
+                cmd.ExecuteNonQuery();
+            }
+            con.Close ();
         }
 
         static void GetDownloadLinks() //funkcja używająca selenium w celu pobrania danych.
@@ -366,7 +384,7 @@ namespace StatisticDataReader
 
         static List<string> GetWeather() //webscrapping pogody
         {
-            const string url = "https://pogoda.onet.pl/tag/prognoza-pogody";
+            const string url = "https://pogoda.interia.pl/prognoza-szczegolowa-warszawa,cId,36917";
 
             List<string> weatherData = new List<string>(); //po kolei dane: temperatura, opis, jakość powietrza
 
@@ -377,9 +395,9 @@ namespace StatisticDataReader
             {
                 fDriver.Navigate().GoToUrl(url);
 
-                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='temp']")).Text);
-                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='forecastDesc']")).Text);
-                weatherData.Add(fDriver.FindElement(By.XPath("//span[@class='pollutionIconDesc']")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[@class='weather-currently-temp-strict']")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//li[@class='weather-currently-icon-description']")).Text);
+                weatherData.Add(fDriver.FindElement(By.XPath("//div[contains(text(),'Dobra')]")).Text);
 
                 fDriver.Close();
             }
