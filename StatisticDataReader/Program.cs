@@ -12,8 +12,10 @@ using System.Runtime.CompilerServices;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Firefox;
 using System.Threading;
+using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using System.Security.Cryptography.X509Certificates;
+using System.Dynamic;
 
 namespace StatisticDataReader
 {
@@ -43,13 +45,33 @@ namespace StatisticDataReader
             "Świętokrzyska/Zielna (display)",
             "Żwirki i Wigury/Trojdena - suma" };
 
+        private static int freeBikes;
+
         private static List<int> bikersCounts = new List<int>();
+        private static List<int> veturiloData = new List<int>();
 
         static void Main(string[] args)
         {
-            GetDownloadLinks();
-            bikersCounts = ReadBikersData(path);
-            ConnectAndFillDatabase();
+            Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    GetDownloadLinks();
+                    bikersCounts = ReadBikersData(path);
+                    veturiloData = GetBikesData();
+                    ConnectAndFillDatabase();
+                    Thread.Sleep(86400000); //co 24h 86400000ms
+                }
+            });
+
+            Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    freeBikes = GetFreeBikes();
+                    Thread.Sleep(5000); //co 5s 5000ms
+                }
+            });
         }
 
         static void GetDataFile(string url, string path) //funkcja odpowiedzialna za pobranie pliku z danymi.
@@ -183,5 +205,63 @@ namespace StatisticDataReader
                 fDriver.Close();
             }
         }
+
+        static List<int> GetBikesData() //webscrapping danych o rowerach veturilo
+        {
+            const string url = "https://www.veturilo.waw.pl/mapa-stacji/";
+            int allBikes = 0;
+
+            List<int> veturiloData = new List<int>(); //po kolei dane: ilość stacji, ilość rowerów
+
+            FirefoxOptions options = new FirefoxOptions();
+            options.AddArguments("--headless");
+
+            using (FirefoxDriver fDriver = new FirefoxDriver(options))
+            {
+                fDriver.Navigate().GoToUrl(url);
+
+                var link = fDriver.FindElements(By.TagName("tr"));
+                veturiloData.Add(link.Count() - 1); //odejmujemy nagłówek
+                Console.WriteLine(link.Count() - 1);
+
+                for (int i = 2; i <= link.Count() - 1; i++)
+                {
+                    allBikes += int.Parse(fDriver.FindElement(By.XPath("//tr[" + i + "]/td[3]")).Text);
+                }
+                veturiloData.Add(allBikes);
+
+                fDriver.Close();
+            }
+            return veturiloData;
+        }
+
+        static int GetFreeBikes() //aktualnie wole rowery
+        {
+            const string url = "https://www.veturilo.waw.pl/mapa-stacji/";
+            int freeBikes = 0;
+
+            FirefoxOptions options = new FirefoxOptions();
+            options.AddArguments("--headless");
+
+            using (FirefoxDriver fDriver = new FirefoxDriver(options))
+            {
+                fDriver.Navigate().GoToUrl(url);
+
+                var link = fDriver.FindElements(By.TagName("tr"));
+                veturiloData.Add(link.Count() - 1); //odejmujemy nagłówek
+                Console.WriteLine(link.Count() - 1);
+
+                for (int i = 2; i <= link.Count() - 1; i++)
+                {
+                    freeBikes += int.Parse(fDriver.FindElement(By.XPath("//tr[" + i + "]/td[2]")).Text);
+                }
+                veturiloData.Add(freeBikes);
+
+                fDriver.Close();
+            }
+
+            return freeBikes;
+        }
+
     }
 }
