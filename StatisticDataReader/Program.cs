@@ -26,7 +26,7 @@ namespace StatisticDataReader
     */
     class Program
     {
-        private const string path = @"C:\Users\Krystian\Desktop\DataScrapper\StatisticDataReader\DataFile\"; //ścieżka do folderu w którym zapisuje się plik z danymi, w naszym przypadku jest to ścieżka na naszym serwerze.
+        private const string path = @"C:\Users\ch\Desktop\DataScrapper\StatisticDataReader\DataFile\"; //ścieżka do folderu w którym zapisuje się plik z danymi, w naszym przypadku jest to ścieżka na naszym serwerze.
         private const string connStr = "server=remotemysql.com;user=rsnE4IGWZE;database=rsnE4IGWZE;password=DwbWHpJ6zr;"; //ciąg zaków dla biblioteki łączącej skrypt i aplikację z bazą danych
         private static string[] locations = { "Aleje Jerozolimskie/pl. Zawiszy - suma", 
             "Banacha/Żwirki i Wigury (display)", 
@@ -59,10 +59,8 @@ namespace StatisticDataReader
                     GetDownloadLinks();
                     bikersCounts = ReadBikersData(path);
                     veturiloData = GetBikesData();
-                    weatherData = GetWeather();
                     ConnectAndFillDatabase();
                     FillVeturiloStationsData();
-                    FillWheatherData();
                     Console.WriteLine("gówno");
                     Thread.Sleep(86400000); //co 24h 86400000ms
                 }
@@ -74,8 +72,17 @@ namespace StatisticDataReader
                 {
                     freeBikes = GetFreeBikes();
                     FillFreeBikesData(freeBikes);
-                    Console.WriteLine("cycki");
                     Thread.Sleep(5000); //co 5s 5000ms
+                }
+            });
+
+            Task.Factory.StartNew(() =>
+            {
+                while (true)
+                {
+                    weatherData = GetWeather();
+                    FillWheatherData();
+                    Thread.Sleep(3600000); //co 1h 3600000ms
                 }
             });
             Console.ReadKey();
