@@ -61,7 +61,6 @@ namespace StatisticDataReader
                     veturiloData = GetBikesData();
                     ConnectAndFillDatabase();
                     FillVeturiloStationsData();
-                    Console.WriteLine("gówno");
                     Thread.Sleep(86400000); //co 24h 86400000ms
                 }
             });
@@ -136,13 +135,13 @@ namespace StatisticDataReader
 
         static void ConnectAndFillDatabase() //połączenie z bazą danych sql + aktulizacja nowych danych
         {
-            Console.WriteLine("Connecting to database");
             using var con = new MySqlConnection(connStr);
             con.Open();
+
             string sql1 = "SELECT * FROM data";
             using var cmd1 = new MySqlCommand(sql1, con);
             using MySqlDataReader rdr = cmd1.ExecuteReader();
-            Console.WriteLine("Filling data");
+
             if (!rdr.HasRows)
             {
                 rdr.Close();
@@ -179,10 +178,9 @@ namespace StatisticDataReader
                 }
             }
             con.Close();
-            Console.WriteLine("Finished!");
         }
 
-        static void FillVeturiloStationsData()
+        static void FillVeturiloStationsData() //wprowadzanie do bazy danych liczby stacji i rowerów
         {
             using var con = new MySqlConnection(connStr);
             con.Open();
@@ -221,7 +219,7 @@ namespace StatisticDataReader
             con.Close();
         }
 
-        static void FillFreeBikesData(int bikes)
+        static void FillFreeBikesData(int bikes) //wprowadzanie do bazy danych liczby wolnych rowerów
         {
             using var con = new MySqlConnection(connStr);
             con.Open();
@@ -255,7 +253,7 @@ namespace StatisticDataReader
             con.Close();
         }
 
-        static void FillWheatherData()
+        static void FillWheatherData() //wprowadzanie pogody do bazy
         {
             using var con = new MySqlConnection(connStr);
             con.Open();
@@ -305,7 +303,6 @@ namespace StatisticDataReader
         {
             const string bikeDatabase = "http://greenelephant.pl/shiny/rowery/";
 
-            Console.WriteLine("Starting browser");
             FirefoxOptions options = new FirefoxOptions();
             options.AddArguments("--headless");
 
@@ -326,7 +323,6 @@ namespace StatisticDataReader
 
                 foreach (string x in locations)
                 {
-                    Console.WriteLine("Checking data for: "+x);
                     fDriver.FindElement(By.XPath("//span[contains(text(),'" + x + "')]")).Click();
                 }
 
@@ -352,7 +348,6 @@ namespace StatisticDataReader
 
                 var link = fDriver.FindElements(By.TagName("tr"));
                 veturiloData.Add(link.Count() - 1); //odejmujemy nagłówek
-                Console.WriteLine(link.Count() - 1);
 
                 for (int i = 2; i <= link.Count() - 1; i++)
                 {
@@ -379,7 +374,6 @@ namespace StatisticDataReader
 
                 var link = fDriver.FindElements(By.TagName("tr"));
                 veturiloData.Add(link.Count() - 1); //odejmujemy nagłówek
-                Console.WriteLine(link.Count() - 1);
 
                 for (int i = 2; i <= link.Count() - 1; i++)
                 {
@@ -389,7 +383,6 @@ namespace StatisticDataReader
 
                 fDriver.Close();
             }
-
             return freeBikes;
         }
 
